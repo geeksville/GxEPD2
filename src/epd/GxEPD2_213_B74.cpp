@@ -14,7 +14,7 @@
 #include "GxEPD2_213_B74.h"
 
 GxEPD2_213_B74::GxEPD2_213_B74(int16_t cs, int16_t dc, int16_t rst, int16_t busy, SPIClass &spi) :
-  GxEPD2_EPD(cs, dc, rst, busy, HIGH, 10000000, WIDTH, HEIGHT, panel, hasColor, hasPartialUpdate, hasFastPartialUpdate)
+  GxEPD2_EPD(cs, dc, rst, busy, HIGH, 10000000, WIDTH, HEIGHT, panel, hasColor, hasPartialUpdate, hasFastPartialUpdate, spi)
 {
 }
 
