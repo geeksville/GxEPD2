@@ -12,8 +12,8 @@
 
 #include "GxEPD2_420.h"
 
-GxEPD2_420::GxEPD2_420(int8_t cs, int8_t dc, int8_t rst, int8_t busy) :
-  GxEPD2_EPD(cs, dc, rst, busy, LOW, 10000000, WIDTH, HEIGHT, panel, hasColor, hasPartialUpdate, hasFastPartialUpdate)
+GxEPD2_420::GxEPD2_420(int8_t cs, int8_t dc, int8_t rst, int8_t busy, SPIClass &spi) :
+  GxEPD2_EPD(cs, dc, rst, busy, LOW, 10000000, WIDTH, HEIGHT, panel, hasColor, hasPartialUpdate, hasFastPartialUpdate, spi)
 {
 }
 
@@ -230,18 +230,14 @@ void GxEPD2_420::refresh(bool partial_update_mode)
 void GxEPD2_420::refresh(int16_t x, int16_t y, int16_t w, int16_t h)
 {
   if (_initial_refresh) return refresh(false); // initial update needs be full update
-  // intersection with screen
-  int16_t w1 = x < 0 ? w + x : w; // reduce
-  int16_t h1 = y < 0 ? h + y : h; // reduce
+  x -= x % 8; // byte boundary
+  w -= x % 8; // byte boundary
   int16_t x1 = x < 0 ? 0 : x; // limit
   int16_t y1 = y < 0 ? 0 : y; // limit
-  w1 = x1 + w1 < int16_t(WIDTH) ? w1 : int16_t(WIDTH) - x1; // limit
-  h1 = y1 + h1 < int16_t(HEIGHT) ? h1 : int16_t(HEIGHT) - y1; // limit
-  if ((w1 <= 0) || (h1 <= 0)) return; 
-  // make x1, w1 multiple of 8
-  w1 += x1 % 8;
-  if (w1 % 8 > 0) w1 += 8 - w1 % 8;
-  x1 -= x1 % 8;
+  int16_t w1 = x + w < int16_t(WIDTH) ? w : int16_t(WIDTH) - x; // limit
+  int16_t h1 = y + h < int16_t(HEIGHT) ? h : int16_t(HEIGHT) - y; // limit
+  w1 -= x1 - x;
+  h1 -= y1 - y;
   if (!_using_partial_mode) _Init_Part();
   if (usePartialUpdateWindow) _writeCommand(0x91); // partial in
   _setPartialRamArea(x1, y1, w1, h1);
@@ -398,7 +394,7 @@ const unsigned char GxEPD2_420::lut_24_bb_full[] PROGMEM =
 // new waveform created by Jean-Marc Zingg for the actual panel
 #define T1 25 // color change charge balance pre-phase
 #define T2  1 // color change or sustain charge balance pre-phase
-#define T3  4 // color change or sustain phase, was 2 before
+#define T3  2 // color change or sustain phase
 #define T4 25 // color change phase
 
 // for new waveform without sustain phase: uncomment next 2 lines, not good for fat fonts
